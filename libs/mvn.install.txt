@@ -1,0 +1,1 @@
+mvn install:install-file -Dfile=enabler/build/libs/enabler.jar -DgroupId=de.schildbach.pte -DartifactId=public-transport-enabler -Dversion=0.0.1-SNAPSHOT -Dpackaging=jar -DgeneratePom=true
