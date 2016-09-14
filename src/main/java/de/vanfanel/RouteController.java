@@ -8,14 +8,14 @@ import de.schildbach.pte.dto.*;
 import de.vanfanel.exceptions.HTTPInternalServerErrorException;
 import de.vanfanel.exceptions.HTTPNotFoundException;
 import de.vanfanel.request.NearbyStationRequest;
+import de.vanfanel.request.NextDeparturesRequest;
 import de.vanfanel.request.RouteRequest;
+import de.vanfanel.request.TripRequest;
 import de.vanfanel.response.NearbyStationsResponse;
 import de.vanfanel.response.RouteDataResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -33,16 +33,60 @@ public class RouteController {
       Product.REGIONAL_TRAIN, Product.SUBURBAN_TRAIN, Product.CABLECAR, Product.ON_DEMAND);
 
 
-  @RequestMapping(value = "getNearbyStations", method = RequestMethod.POST)
-  public @ResponseBody
-  NearbyStationsResponse getNearbyStations(@RequestBody NearbyStationRequest request) throws Exception{
+  @RequestMapping(value = "departures", method = RequestMethod.GET)
+  public @ResponseBody List<StationDepartures> getNextDepartures(NextDeparturesRequest request) throws Exception {
+
+    VrrProvider vrrProvider = new VrrProvider();
+    String stationId = convertStationNameToId(request.getStation());
+
+    QueryDeparturesResult results;
+    try {
+       results = vrrProvider.queryDepartures(stationId, new Date(request.getDepartureTime()),
+          request.getMaxDepartures(), true);
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new HTTPInternalServerErrorException();
+    }
+
+    if(results.stationDepartures.size() == 0) {
+      System.out.println("no result found");
+      throw new HTTPNotFoundException();
+    }
+
+    return results.stationDepartures;
+  }
+
+  @RequestMapping(value = "locations", method = RequestMethod.GET)
+  public @ResponseBody List<Location> getLocations(@RequestParam String searchFor) throws Exception {
+    List<Location> result;
+    try {
+      result = getLocationSuggestions(searchFor);
+    } catch (IOException e) {
+      e.printStackTrace();
+      throw new HTTPInternalServerErrorException();
+    }
+    if(result.size() == 0){
+      throw new HTTPNotFoundException();
+    }
+    return result;
+  }
+
+  @Deprecated
+  @RequestMapping(value = "nearbyStations", method = RequestMethod.POST)
+  public @ResponseBody NearbyStationsResponse getNearbyStations(@RequestBody NearbyStationRequest request) throws Exception{
+    return getStations(request);
+  }
+
+  @RequestMapping(value = "stations", method = RequestMethod.GET)
+  public @ResponseBody NearbyStationsResponse getStations(NearbyStationRequest request) throws Exception{
 
     AbstractEfaProvider provider = new VrrProvider();
     NearbyStationsResponse response = new NearbyStationsResponse();
     final Location requestLocation = Location.coord(request.getLat(), request.getLng());
 
     try {
-      NearbyLocationsResult result = provider.queryNearbyLocations(DEFAULT_LOCATION_SET, requestLocation, request.getDistance(), request.getMaxResult());
+      NearbyLocationsResult result = provider.queryNearbyLocations(DEFAULT_LOCATION_SET, requestLocation,
+          request.getDistance(), request.getMaxResult());
       if(result.locations.size() <= 0)
       {
         throw new HTTPNotFoundException();
@@ -58,28 +102,44 @@ public class RouteController {
       e.printStackTrace();
       throw new HTTPInternalServerErrorException();
     }
-
   }
 
+  @Deprecated
   @RequestMapping(value = "", method = RequestMethod.POST)
-  public @ResponseBody
-  RouteDataResponse getRoute(@RequestBody RouteRequest request) throws Exception {
+  public @ResponseBody RouteDataResponse getRoute(@RequestBody RouteRequest request) throws Exception {
+    return getTrip(new TripRequest(request.getDepartureIds(),request.getDestinationId(),request.getDepartureTime()));
+  }
 
+  @RequestMapping(value = "trip", method = RequestMethod.GET)
+  public @ResponseBody RouteDataResponse getTrip(TripRequest request) throws Exception {
     AbstractEfaProvider provider = new VrrProvider();
-
     List<QueryTripsResult> results = new ArrayList<>();
+    List<String> departureIds = new ArrayList<>();
 
-    request.getDepartureIds().parallelStream().forEach(departureId -> {
+    String destinationId = this.convertStationNameToId(request.getDestination());
+
+    for(String stationId: request.getDepartures()) {
+      departureIds.add(this.convertStationNameToId(stationId));
+    }
+
+    departureIds.parallelStream().forEach(departureId -> {
       try {
         QueryTripsResult tripsResult = getQueryTripsResult(request.getDepartureTime(), departureId,
-            request.getDestinationId(), provider);
+            destinationId, provider);
         results.add(tripsResult);
       }catch (IOException e) {
         e.printStackTrace();
       }
     });
 
-    int sumResults = results.parallelStream().mapToInt(trips -> trips.trips.size()).sum();
+    if(results.size() == 0 ) {
+      throw new HTTPNotFoundException();
+    }
+
+    int sumResults = results.parallelStream().mapToInt(trips -> {
+      Optional<List<Trip>> optionalTrips = Optional.ofNullable(trips.trips);
+      return optionalTrips.isPresent() ? optionalTrips.get().size() : 0;
+    }).sum();
 
     if(sumResults <= 0){
       throw new HTTPNotFoundException();
@@ -88,7 +148,10 @@ public class RouteController {
     RouteDataResponse response = new RouteDataResponse();
 
     List<Trip> tripResults = new ArrayList<>();
-    results.parallelStream().map(queryTripsResult -> queryTripsResult.trips).forEach(tripResults::addAll);
+    results.parallelStream().map(queryTripsResult -> Optional.ofNullable(queryTripsResult.trips)).forEach( trip -> {
+          trip.ifPresent(tripResults::addAll);
+        }
+    );
 
     List<Trip> trips = orderTripsByDeparture(tripResults);
 
@@ -97,6 +160,20 @@ public class RouteController {
     );
 
     return response;
+  }
+
+  private String convertStationNameToId(String station) throws Exception {
+
+    if(StringUtils.isNumeric(station)) {
+      return station;
+    }
+    return getLocations(station).get(0).id;
+  }
+
+  private List<Location> getLocationSuggestions(String location) throws IOException{
+    VrrProvider provider = new VrrProvider();
+    SuggestLocationsResult locations = provider.suggestLocations(location);
+    return locations.getLocations();
   }
 
   private List<Trip> orderTripsByDeparture(List<Trip> results) {

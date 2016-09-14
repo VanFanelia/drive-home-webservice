@@ -1,10 +1,12 @@
 package de.vanfanel;
 
+import de.schildbach.pte.dto.Location;
 import de.vanfanel.request.NearbyStationRequest;
 import de.vanfanel.request.RouteRequest;
+import de.vanfanel.request.TripRequest;
 import de.vanfanel.response.NearbyStationsResponse;
 import de.vanfanel.response.RouteDataResponse;
-import org.junit.Ignore;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -18,12 +20,11 @@ import static org.hamcrest.core.IsCollectionContaining.hasItem;
 public class RouteControllerTest {
 
   public static final String STATION_ID_COLOGNE_HBF = "22000008";
-  public static final String STATION_ID_DORTMUND_HBF = "20009289";
+  public static final String STATION_ID_DORTMUND_HBF = "20000131";
   public static final String STATION_ID_DÜSSELDORF = "20018235";
 
 
   @Test
-  @Ignore
   public void testGetNearbyStationsForDuesseldorf () throws Exception
   {
     RouteController routeController = new RouteController();
@@ -38,14 +39,23 @@ public class RouteControllerTest {
   }
 
   @Test
-  @Ignore
+  public void testGetLocationsForSearchString () throws Exception
+  {
+    RouteController routeController = new RouteController();
+
+    List<Location> locations = routeController.getLocations("Dortmund HauptBahnHof");
+
+    System.out.println(locations);
+  }
+
+  @Test
   public void testGetNearbyStationsForCologne () throws Exception
   {
     RouteController routeController = new RouteController();
 
     NearbyStationRequest request = new NearbyStationRequest(50941357, 6958307,0,20);
 
-    NearbyStationsResponse response = routeController.getNearbyStations(request);
+    NearbyStationsResponse response = routeController.getStations(request);
 
     System.out.println(response);
 
@@ -53,7 +63,6 @@ public class RouteControllerTest {
   }
 
   @Test
-  @Ignore
   public void testRouteControllerDuesseldorf () throws Exception
   {
     RouteController routeController = new RouteController();
@@ -63,4 +72,20 @@ public class RouteControllerTest {
 
     response.routes.stream().forEachOrdered(System.out::println);
   }
+
+  @Test
+  public void testResultIsTheSameWithIdAndStationName () throws Exception {
+    RouteController routeController = new RouteController();
+    List<String> departureIds = new ArrayList<>();
+    departureIds.add(STATION_ID_DORTMUND_HBF);
+    RouteDataResponse responseById = routeController.getTrip(new TripRequest(departureIds,STATION_ID_DÜSSELDORF, new Date()));
+
+    List<String> departureNames = new ArrayList<>();
+    departureNames.add("Dortmund HBF");
+    RouteDataResponse responseByName = routeController.getTrip(new TripRequest(departureNames,STATION_ID_DÜSSELDORF, new Date()));
+
+    assertThat(responseById, Matchers.equalTo(responseByName));
+  }
+
+
 }

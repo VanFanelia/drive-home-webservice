@@ -5,41 +5,41 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-@Deprecated
-public class RouteRequest {
+public class TripRequest {
 
-  public List<String> departureIds;
+  public List<String> departures = new ArrayList<>();
 
-  public String destinationId;
+  public String destination;
 
-  public Date departureTime;
+  public Date departureTime = new Date();
 
-  public RouteRequest() {
+  public TripRequest() {
   }
 
-  public RouteRequest(List<String> departureIds, String destinationId, Date departureTime) {
-    this.departureIds = departureIds;
-    this.destinationId = destinationId;
+  public TripRequest(List<String> departures, String destination, Date departureTime) {
+    this.departures = departures;
+    this.destination = destination;
     this.departureTime = departureTime;
   }
 
-  public List<String> getDepartureIds() {
-    return departureIds;
+  public List<String> getDepartures() {
+    return departures;
   }
 
-  public void setDepartureIds(List<String> departureIds) {
-    this.departureIds = departureIds;
+  public void setDepartures(List<String> departures) {
+    this.departures = departures;
   }
 
-  public String getDestinationId() {
-    return destinationId;
+  public String getDestination() {
+    return destination;
   }
 
-  public void setDestinationId(String destinationId) {
-    this.destinationId = destinationId;
+  public void setDestination(String destination) {
+    this.destination = destination;
   }
 
   public Date getDepartureTime() {
