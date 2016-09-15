@@ -71,12 +71,6 @@ public class RouteController {
     return result;
   }
 
-  @Deprecated
-  @RequestMapping(value = "nearbyStations", method = RequestMethod.POST)
-  public @ResponseBody NearbyStationsResponse getNearbyStations(@RequestBody NearbyStationRequest request) throws Exception{
-    return getStations(request);
-  }
-
   @RequestMapping(value = "stations", method = RequestMethod.GET)
   public @ResponseBody NearbyStationsResponse getStations(NearbyStationRequest request) throws Exception{
 
@@ -102,12 +96,6 @@ public class RouteController {
       e.printStackTrace();
       throw new HTTPInternalServerErrorException();
     }
-  }
-
-  @Deprecated
-  @RequestMapping(value = "", method = RequestMethod.POST)
-  public @ResponseBody RouteDataResponse getRoute(@RequestBody RouteRequest request) throws Exception {
-    return getTrip(new TripRequest(request.getDepartureIds(),request.getDestinationId(),request.getDepartureTime()));
   }
 
   @RequestMapping(value = "trip", method = RequestMethod.GET)
@@ -162,8 +150,21 @@ public class RouteController {
     return response;
   }
 
-  private String convertStationNameToId(String station) throws Exception {
+  @Deprecated
+  @RequestMapping(value = "nearbyStations", method = RequestMethod.POST)
+  public @ResponseBody NearbyStationsResponse getNearbyStations(@RequestBody NearbyStationRequest request) throws Exception{
+    return getStations(request);
+  }
 
+  @Deprecated
+  @RequestMapping(value = "", method = RequestMethod.POST)
+  public @ResponseBody RouteDataResponse getRoute(@RequestBody RouteRequest request) throws Exception {
+    return getTrip(new TripRequest(request.getDepartureIds(),request.getDestinationId(),request.getDepartureTime()));
+  }
+
+
+
+  private String convertStationNameToId(String station) throws Exception {
     if(StringUtils.isNumeric(station)) {
       return station;
     }
@@ -177,14 +178,12 @@ public class RouteController {
   }
 
   private List<Trip> orderTripsByDeparture(List<Trip> results) {
-
     List<Trip> tripsOrderedByDeparture = new ArrayList<>();
 
     tripsOrderedByDeparture.addAll(results);
     tripsOrderedByDeparture.sort(Comparator.comparingLong(trip -> trip.getFirstDepartureTime().getTime()));
 
     return tripsOrderedByDeparture;
-
   }
 
   private QueryTripsResult getQueryTripsResult(Date departureTime, String departureId, String destinationId,
