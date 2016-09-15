@@ -73,9 +73,19 @@ public class RouteController {
 
   @RequestMapping(value = "stations", method = RequestMethod.GET)
   public @ResponseBody NearbyStationsResponse getStations(NearbyStationRequest request) throws Exception{
-
-    AbstractEfaProvider provider = new VrrProvider();
+    NearbyLocationsResult result = getRawStations(request);
     NearbyStationsResponse response = new NearbyStationsResponse();
+
+    result.locations.stream().forEachOrdered(location ->
+        response.addStation(location.id, String.format("%s %s", location.place, location.name))
+    );
+
+    return response;
+  }
+
+  @RequestMapping(value = "raw/stations", method = RequestMethod.GET)
+  public @ResponseBody NearbyLocationsResult getRawStations(NearbyStationRequest request) throws Exception {
+    AbstractEfaProvider provider = new VrrProvider();
     final Location requestLocation = Location.coord(request.getLat(), request.getLng());
 
     try {
@@ -86,11 +96,7 @@ public class RouteController {
         throw new HTTPNotFoundException();
       }
 
-      result.locations.stream().forEachOrdered(location ->
-          response.addStation(location.id, String.format("%s %s", location.place, location.name))
-      );
-
-      return response;
+      return result;
 
     } catch (IOException e) {
       e.printStackTrace();
