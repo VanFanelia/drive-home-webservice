@@ -106,29 +106,7 @@ public class RouteController {
 
   @RequestMapping(value = "trip", method = RequestMethod.GET)
   public @ResponseBody RouteDataResponse getTrip(TripRequest request) throws Exception {
-    AbstractEfaProvider provider = new VrrProvider();
-    List<QueryTripsResult> results = new ArrayList<>();
-    List<String> departureIds = new ArrayList<>();
-
-    String destinationId = this.convertStationNameToId(request.getDestination());
-
-    for(String stationId: request.getDepartures()) {
-      departureIds.add(this.convertStationNameToId(stationId));
-    }
-
-    departureIds.parallelStream().forEach(departureId -> {
-      try {
-        QueryTripsResult tripsResult = getQueryTripsResult(request.getDepartureTime(), departureId,
-            destinationId, provider);
-        results.add(tripsResult);
-      }catch (IOException e) {
-        e.printStackTrace();
-      }
-    });
-
-    if(results.size() == 0 ) {
-      throw new HTTPNotFoundException();
-    }
+    List<QueryTripsResult> results = getRawTrip(request);
 
     int sumResults = results.parallelStream().mapToInt(trips -> {
       Optional<List<Trip>> optionalTrips = Optional.ofNullable(trips.trips);
@@ -156,6 +134,34 @@ public class RouteController {
     return response;
   }
 
+  @RequestMapping(value = "raw/trip", method = RequestMethod.GET)
+  public @ResponseBody List<QueryTripsResult> getRawTrip(TripRequest request) throws Exception {
+    AbstractEfaProvider provider = new VrrProvider();
+    List<QueryTripsResult> results = new ArrayList<>();
+    List<String> departureIds = new ArrayList<>();
+
+    String destinationId = this.convertStationNameToId(request.getDestination());
+
+    for(String stationId: request.getDepartures()) {
+      departureIds.add(this.convertStationNameToId(stationId));
+    }
+
+    departureIds.parallelStream().forEach(departureId -> {
+      try {
+        QueryTripsResult tripsResult = getQueryTripsResult(request.getDepartureTime(), departureId,
+            destinationId, provider);
+        results.add(tripsResult);
+      }catch (IOException e) {
+        e.printStackTrace();
+      }
+    });
+
+    if(results.size() == 0 ) {
+      throw new HTTPNotFoundException();
+    }
+    return results;
+  }
+
   @Deprecated
   @RequestMapping(value = "nearbyStations", method = RequestMethod.POST)
   public @ResponseBody NearbyStationsResponse getNearbyStations(@RequestBody NearbyStationRequest request) throws Exception{
@@ -167,8 +173,6 @@ public class RouteController {
   public @ResponseBody RouteDataResponse getRoute(@RequestBody RouteRequest request) throws Exception {
     return getTrip(new TripRequest(request.getDepartureIds(),request.getDestinationId(),request.getDepartureTime()));
   }
-
-
 
   private String convertStationNameToId(String station) throws Exception {
     if(StringUtils.isNumeric(station)) {
