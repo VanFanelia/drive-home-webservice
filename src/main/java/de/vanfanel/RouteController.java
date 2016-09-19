@@ -42,7 +42,7 @@ public class RouteController {
     QueryDeparturesResult results;
     try {
        results = vrrProvider.queryDepartures(stationId, new Date(request.getDepartureTime()),
-          request.getMaxDepartures(), true);
+          request.getMaxResults(), true);
     } catch (IOException e) {
       e.printStackTrace();
       throw new HTTPInternalServerErrorException();

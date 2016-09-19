@@ -13,15 +13,15 @@ public class NextDeparturesRequest {
 
   private long departureTime = new Date().getTime();
 
-  private int maxDepartures = 10;
+  private int maxResults = 10;
 
   public NextDeparturesRequest() {
   }
 
-  public NextDeparturesRequest(String station, long departureTime, int maxDepartures) {
+  public NextDeparturesRequest(String station, long departureTime, int maxResults) {
     this.station = station;
     this.departureTime = departureTime;
-    this.maxDepartures = maxDepartures;
+    this.maxResults = maxResults;
   }
 
   public String getStation() {
@@ -40,12 +40,12 @@ public class NextDeparturesRequest {
     this.departureTime = departureTime;
   }
 
-  public int getMaxDepartures() {
-    return maxDepartures;
+  public int getMaxResults() {
+    return maxResults;
   }
 
-  public void setMaxDepartures(int maxDepartures) {
-    this.maxDepartures = maxDepartures;
+  public void setMaxResults(int maxResults) {
+    this.maxResults = maxResults;
   }
 
   @Override
