@@ -78,11 +78,11 @@ public class RouteControllerTest {
     RouteController routeController = new RouteController();
     List<String> departureIds = new ArrayList<>();
     departureIds.add(STATION_ID_DORTMUND_HBF);
-    RouteDataResponse responseById = routeController.getTrip(new TripRequest(departureIds,STATION_ID_DÜSSELDORF, new Date()));
+    RouteDataResponse responseById = routeController.getTrip(new TripRequest(departureIds,STATION_ID_DÜSSELDORF, new Date().getTime()));
 
     List<String> departureNames = new ArrayList<>();
     departureNames.add("Dortmund HBF");
-    RouteDataResponse responseByName = routeController.getTrip(new TripRequest(departureNames,STATION_ID_DÜSSELDORF, new Date()));
+    RouteDataResponse responseByName = routeController.getTrip(new TripRequest(departureNames,STATION_ID_DÜSSELDORF, new Date().getTime()));
 
     assertThat(responseById, Matchers.equalTo(responseByName));
   }

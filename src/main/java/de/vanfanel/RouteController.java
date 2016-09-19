@@ -171,7 +171,7 @@ public class RouteController {
   @Deprecated
   @RequestMapping(value = "", method = RequestMethod.POST)
   public @ResponseBody RouteDataResponse getRoute(@RequestBody RouteRequest request) throws Exception {
-    return getTrip(new TripRequest(request.getDepartureIds(),request.getDestinationId(),request.getDepartureTime()));
+    return getTrip(new TripRequest(request.getDepartureIds(),request.getDestinationId(),request.getDepartureTime().getTime()));
   }
 
   private String convertStationNameToId(String station) throws Exception {
@@ -196,12 +196,12 @@ public class RouteController {
     return tripsOrderedByDeparture;
   }
 
-  private QueryTripsResult getQueryTripsResult(Date departureTime, String departureId, String destinationId,
+  private QueryTripsResult getQueryTripsResult(long departureTime, String departureId, String destinationId,
                                                AbstractEfaProvider provider) throws IOException {
     return provider.queryTrips(
             new Location(LocationType.STATION, departureId),null,
             new Location(LocationType.STATION, destinationId),
-            departureTime == null ? new Date(): departureTime,
+            departureTime == 0 ? new Date() : new Date(departureTime),
             true, DEFAULT_PRODUCT_SET ,null, NetworkProvider.WalkSpeed.FAST, null, null );
   }
 

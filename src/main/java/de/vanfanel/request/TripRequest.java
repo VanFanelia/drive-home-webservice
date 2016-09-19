@@ -15,12 +15,12 @@ public class TripRequest {
 
   public String destination;
 
-  public Date departureTime = new Date();
+  public long departureTime = new Date().getTime();
 
   public TripRequest() {
   }
 
-  public TripRequest(List<String> departures, String destination, Date departureTime) {
+  public TripRequest(List<String> departures, String destination, long departureTime) {
     this.departures = departures;
     this.destination = destination;
     this.departureTime = departureTime;
@@ -42,11 +42,11 @@ public class TripRequest {
     this.destination = destination;
   }
 
-  public Date getDepartureTime() {
+  public long getDepartureTime() {
     return departureTime;
   }
 
-  public void setDepartureTime(Date departureTime) {
+  public void setDepartureTime(long departureTime) {
     this.departureTime = departureTime;
   }
 
