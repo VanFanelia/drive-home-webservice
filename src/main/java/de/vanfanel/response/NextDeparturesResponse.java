@@ -5,23 +5,26 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ReflectionToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class NextDeparturesResponse {
 
-  private String station;
+  private List<String> departures = new ArrayList<>();
 
   public NextDeparturesResponse() {
   }
 
-  public NextDeparturesResponse(String station) {
-    this.station = station;
+  public NextDeparturesResponse(List<String> departures) {
+    this.departures = departures;
   }
 
-  public String getStation() {
-    return station;
+  public List<String> getDepartures() {
+    return departures;
   }
 
-  public void setStation(String station) {
-    this.station = station;
+  public void setDepartures(List<String> departures) {
+    this.departures = departures;
   }
 
   @Override

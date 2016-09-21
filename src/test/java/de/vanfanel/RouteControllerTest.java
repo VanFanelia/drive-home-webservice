@@ -2,9 +2,11 @@ package de.vanfanel;
 
 import de.schildbach.pte.dto.Location;
 import de.vanfanel.request.NearbyStationRequest;
+import de.vanfanel.request.NextDeparturesRequest;
 import de.vanfanel.request.RouteRequest;
 import de.vanfanel.request.TripRequest;
 import de.vanfanel.response.NearbyStationsResponse;
+import de.vanfanel.response.NextDeparturesResponse;
 import de.vanfanel.response.RouteDataResponse;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -85,6 +87,14 @@ public class RouteControllerTest {
     RouteDataResponse responseByName = routeController.getTrip(new TripRequest(departureNames,STATION_ID_DÜSSELDORF, new Date().getTime()));
 
     assertThat(responseById, Matchers.equalTo(responseByName));
+  }
+
+  @Test
+  public void testGetDepartures() throws Exception {
+    RouteController routeController = new RouteController();
+    NextDeparturesResponse response = routeController.getNextDepartures(new NextDeparturesRequest("Dortmund HBF",new Date().getTime(), 20));
+
+    assertThat(response.getDepartures(), Matchers.hasSize(20));
   }
 
 

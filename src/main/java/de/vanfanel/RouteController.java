@@ -12,6 +12,7 @@ import de.vanfanel.request.NextDeparturesRequest;
 import de.vanfanel.request.RouteRequest;
 import de.vanfanel.request.TripRequest;
 import de.vanfanel.response.NearbyStationsResponse;
+import de.vanfanel.response.NextDeparturesResponse;
 import de.vanfanel.response.RouteDataResponse;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Controller;
@@ -33,8 +34,8 @@ public class RouteController {
       Product.REGIONAL_TRAIN, Product.SUBURBAN_TRAIN, Product.CABLECAR, Product.ON_DEMAND);
 
 
-  @RequestMapping(value = "departures", method = RequestMethod.GET)
-  public @ResponseBody List<StationDepartures> getNextDepartures(NextDeparturesRequest request) throws Exception {
+  @RequestMapping(value = "raw/departures", method = RequestMethod.GET)
+  public @ResponseBody List<StationDepartures> getRawNextDepartures(NextDeparturesRequest request) throws Exception {
 
     VrrProvider vrrProvider = new VrrProvider();
     String stationId = convertStationNameToId(request.getStation());
@@ -54,6 +55,24 @@ public class RouteController {
     }
 
     return results.stationDepartures;
+  }
+
+  @RequestMapping(value = "departures", method = RequestMethod.GET)
+  public @ResponseBody NextDeparturesResponse getNextDepartures(NextDeparturesRequest request) throws Exception {
+    List<StationDepartures> departures = this.getRawNextDepartures(request);
+    NextDeparturesResponse response = new NextDeparturesResponse();
+
+    List<Departure> orderedDepartures = new ArrayList<>();
+
+    departures.stream().forEach(stationDepartures -> orderedDepartures.addAll(stationDepartures.departures));
+
+    orderedDepartures.sort(Comparator.comparingLong(departure -> departure.getTime().getTime()));
+
+    orderedDepartures.stream().forEachOrdered(
+        departure -> response.getDepartures().add(createDepartureShortInfo(departure))
+    );
+
+    return response;
   }
 
   @RequestMapping(value = "locations", method = RequestMethod.GET)
@@ -244,5 +263,49 @@ public class RouteController {
     return result.toString();
   }
 
+  private String createDepartureShortInfo(Departure departure) {
 
+    int delay = 0;
+    if(departure.predictedTime != null && departure.plannedTime != null) {
+      delay = (int) ((departure.predictedTime.getTime() - departure.plannedTime.getTime() ) / 60000);
+    }
+    String missingLiveData = departure.predictedTime == null ? " - :warning: missing live data" : "";
+
+    String result = String.format("[%s] (+%dm) %s %s -> %s %s",
+        DEFAULT_DATE_FORMAT.format(departure.getTime()),
+        delay,
+        productToSlackIcon(departure.line.product),
+        departure.line.label,
+        departure.destination.name,
+        missingLiveData
+    );
+
+    return result;
+  }
+
+  private String productToSlackIcon(Product p) {
+
+    switch (p) {
+      case HIGH_SPEED_TRAIN:
+        return ":bullettrain_front:";
+      case SUBWAY:
+        return ":metro:";
+      case SUBURBAN_TRAIN: //sbahn
+        return ":tram:";
+      case REGIONAL_TRAIN: // re
+        return ":mountain_railway:";
+      case TRAM:
+        return ":train:";
+      case CABLECAR:
+        return ":trolleybus:";
+      case BUS:
+        return ":bus:";
+      case FERRY:
+        return ":ferry:";
+      case ON_DEMAND:
+        return ":taxi:";
+      default:
+        return ":railway_track:";
+    }
+  }
 }
