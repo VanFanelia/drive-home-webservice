@@ -226,7 +226,9 @@ public class RouteController {
 
   private static String createRouteShortInfo(Trip trip){
     final StringBuilder result = new StringBuilder();
-    result.append(String.format("[%dm] ", trip.getDuration() / 60000));
+
+    String firstDeparture = DEFAULT_DATE_FORMAT.format(trip.legs.get(0).getDepartureTime());
+    result.append(String.format("[%s, %dm] ", firstDeparture, trip.getDuration() / 60000));
 
     for (int counter = 0; counter < trip.legs.size(); counter++){
       Trip.Public leg = (Trip.Public) trip.legs.get(counter);
@@ -234,7 +236,12 @@ public class RouteController {
       if(counter <= 0)
       {
         String departureTime = DEFAULT_DATE_FORMAT.format(leg.getDepartureTime());
-        result.append(String.format("%s (+%dm) %s (%s) -> ", departureTime, leg.departureStop.getDepartureDelay() / 60000, trip.from.name, leg.line.label));
+        result.append(String.format("%s (+%dm) %s %s %s -> ",
+            departureTime,
+            leg.departureStop.getDepartureDelay() / 60000,
+            trip.from.name,
+            productToSlackIcon(leg.line.product),
+            leg.line.label));
       }
 
       if(counter > 0)
@@ -244,10 +251,16 @@ public class RouteController {
         String departureTime = DEFAULT_DATE_FORMAT.format(leg.getDepartureTime());
         String place = defaultIfEmpty(leg.departureStop.location.place,"?");
 
-        result.append(String.format("%s (+%dm) %s. %s -= (%dm) =- %s (+%dm) %s -> ",
-            arrivalTime, lastLeg.getArrivalDelay() / 60000, place.substring(0,1), leg.departureStop.location.name,
+        result.append(String.format("%s (+%dm) %s. %s -= (%dm) =- %s (+%dm) %s %s -> ",
+            arrivalTime,
+            lastLeg.getArrivalDelay() / 60000,
+            place.substring(0,1),
+            leg.departureStop.location.name,
             (leg.getDepartureTime().getTime() - lastLeg.getArrivalTime().getTime()) / 60000,
-            departureTime, leg.getDepartureDelay() / 60000, leg.line.label));
+            departureTime,
+            leg.getDepartureDelay() / 60000,
+            leg.line.product,
+            leg.line.label));
       }
 
       // end position
@@ -283,7 +296,7 @@ public class RouteController {
     return result;
   }
 
-  private String productToSlackIcon(Product p) {
+  private static String productToSlackIcon(Product p) {
 
     switch (p) {
       case HIGH_SPEED_TRAIN:
