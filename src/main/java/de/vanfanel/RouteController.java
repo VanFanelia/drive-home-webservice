@@ -259,7 +259,7 @@ public class RouteController {
             (leg.getDepartureTime().getTime() - lastLeg.getArrivalTime().getTime()) / 60000,
             departureTime,
             leg.getDepartureDelay() / 60000,
-            leg.line.product,
+            productToSlackIcon(leg.line.product),
             leg.line.label));
       }
 
