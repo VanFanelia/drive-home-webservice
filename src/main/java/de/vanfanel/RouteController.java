@@ -236,8 +236,11 @@ public class RouteController {
   }
 
   private List<Location> getLocationSuggestions(String location) throws IOException{
+    System.out.println("Looking for: " + location);
     VrrProvider provider = new VrrProvider();
     SuggestLocationsResult locations = provider.suggestLocations(location);
+    System.out.println(locations.toString());
+    System.out.println("Result List: " + locations.getLocations());
     return locations.getLocations();
   }
 
