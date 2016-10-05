@@ -277,15 +277,14 @@ public class RouteController {
         String departureTime = DEFAULT_DATE_FORMAT.format(leg.getDepartureTime());
         String place = defaultIfEmpty(leg.departureStop.location.place,"?");
 
-        result.append(String.format("%s (+%dm) %s. %s -= (%dm) =- %s (+%dm) %s %s -> ",
+        result.append(String.format("%s (+%dm) %s -= (%dm) =- %s (+%dm) %s %s -> ",
             arrivalTime,
             lastLeg.getArrivalDelay() / 60000,
-            place.substring(0,1),
             leg.departureStop.location.name,
             (leg.getDepartureTime().getTime() - lastLeg.getArrivalTime().getTime()) / 60000,
             departureTime,
             leg.getDepartureDelay() / 60000,
-            leg.line.product,
+            productToSlackIcon(leg.line.product),
             leg.line.label));
       }
 
