@@ -7,10 +7,7 @@ import de.schildbach.pte.VrrProvider;
 import de.schildbach.pte.dto.*;
 import de.vanfanel.exceptions.HTTPInternalServerErrorException;
 import de.vanfanel.exceptions.HTTPNotFoundException;
-import de.vanfanel.request.NearbyStationRequest;
-import de.vanfanel.request.NextDeparturesRequest;
-import de.vanfanel.request.RouteRequest;
-import de.vanfanel.request.TripRequest;
+import de.vanfanel.request.*;
 import de.vanfanel.response.NearbyStationsResponse;
 import de.vanfanel.response.NextDeparturesResponse;
 import de.vanfanel.response.RouteDataResponse;
@@ -60,6 +57,35 @@ public class RouteController {
   @RequestMapping(value = "departures", method = RequestMethod.GET)
   public @ResponseBody NextDeparturesResponse getNextDepartures(NextDeparturesRequest request) throws Exception {
     List<StationDepartures> departures = this.getRawNextDepartures(request);
+    NextDeparturesResponse response = new NextDeparturesResponse();
+
+    List<Departure> orderedDepartures = new ArrayList<>();
+
+    departures.stream().forEach(stationDepartures -> orderedDepartures.addAll(stationDepartures.departures));
+
+    orderedDepartures.sort(Comparator.comparingLong(departure -> departure.getTime().getTime()));
+
+    orderedDepartures.stream().forEachOrdered(
+        departure -> response.getDepartures().add(createDepartureShortInfo(departure))
+    );
+
+    return response;
+  }
+
+  @RequestMapping(value = "multiStationDepartures", method = RequestMethod.GET)
+  public @ResponseBody NextDeparturesResponse getNextDeparturesFromStations(NextMultiDeparturesRequest request) throws Exception {
+    List<StationDepartures> departures = new ArrayList<>();
+
+    request.getStations().parallelStream().forEach( station -> {
+      try {
+        departures.addAll(this.getRawNextDepartures(
+            new NextDeparturesRequest(station,request.getDepartureTime(),request.getMaxResults())
+        ));
+      } catch (Exception e) {
+        e.printStackTrace();
+      }
+    });
+
     NextDeparturesResponse response = new NextDeparturesResponse();
 
     List<Departure> orderedDepartures = new ArrayList<>();

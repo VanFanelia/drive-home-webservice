@@ -1,10 +1,7 @@
 package de.vanfanel;
 
 import de.schildbach.pte.dto.Location;
-import de.vanfanel.request.NearbyStationRequest;
-import de.vanfanel.request.NextDeparturesRequest;
-import de.vanfanel.request.RouteRequest;
-import de.vanfanel.request.TripRequest;
+import de.vanfanel.request.*;
 import de.vanfanel.response.NearbyStationsResponse;
 import de.vanfanel.response.NextDeparturesResponse;
 import de.vanfanel.response.RouteDataResponse;
@@ -97,5 +94,17 @@ public class RouteControllerTest {
     assertThat(response.getDepartures(), Matchers.hasSize(20));
   }
 
+  @Test
+  public void testMultiDeparturesRequest() throws Exception {
+    RouteController routeController = new RouteController();
+    List<String> stations = new ArrayList<>();
+    stations.add("Oberhausen HBF");
+    stations.add("Dortmund HBF");
+
+    NextDeparturesResponse response = routeController.getNextDeparturesFromStations(
+        new NextMultiDeparturesRequest(stations,new Date().getTime(), 10));
+    assertThat(response.getDepartures(), Matchers.hasSize(20));
+
+  }
 
 }
