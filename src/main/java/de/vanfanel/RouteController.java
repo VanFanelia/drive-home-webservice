@@ -76,7 +76,7 @@ public class RouteController {
   public @ResponseBody NextDeparturesResponse getNextDeparturesFromStations(NextMultiDeparturesRequest request) throws Exception {
     List<StationDepartures> departures = new ArrayList<>();
 
-    request.getStations().parallelStream().forEach( station -> {
+    request.getStation().parallelStream().forEach(station -> {
       try {
         departures.addAll(this.getRawNextDepartures(
             new NextDeparturesRequest(station,request.getDepartureTime(),request.getMaxResults())

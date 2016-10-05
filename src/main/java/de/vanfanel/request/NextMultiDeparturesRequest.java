@@ -11,7 +11,7 @@ import java.util.List;
 
 public class NextMultiDeparturesRequest {
 
-  private List<String> stations = new ArrayList<>();
+  private List<String> station = new ArrayList<>();
 
   private long departureTime = new Date().getTime();
 
@@ -20,18 +20,18 @@ public class NextMultiDeparturesRequest {
   public NextMultiDeparturesRequest() {
   }
 
-  public NextMultiDeparturesRequest(List<String> stations, long departureTime, int maxResults) {
-    this.stations = stations;
+  public NextMultiDeparturesRequest(List<String> station, long departureTime, int maxResults) {
+    this.station = station;
     this.departureTime = departureTime;
     this.maxResults = maxResults;
   }
 
-  public List<String> getStations() {
-    return stations;
+  public List<String> getStation() {
+    return station;
   }
 
-  public void setStations(List<String> stations) {
-    this.stations = stations;
+  public void setStation(List<String> station) {
+    this.station = station;
   }
 
   public long getDepartureTime() {
