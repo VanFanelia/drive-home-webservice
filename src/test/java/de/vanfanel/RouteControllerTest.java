@@ -98,11 +98,11 @@ public class RouteControllerTest {
   public void testMultiDeparturesRequest() throws Exception {
     RouteController routeController = new RouteController();
     List<String> stations = new ArrayList<>();
-    stations.add("Oberhausen HBF");
-    stations.add("Dortmund HBF");
+    stations.add("Oberhausen Hauptbahnhof");
+    stations.add("Dortmund Hauptbahnhof");
 
     NextDeparturesResponse response = routeController.getNextDeparturesFromStations(
-        new NextMultiDeparturesRequest(stations,new Date().getTime(), 10));
+        new NextMultiDeparturesRequest(stations, new Date().getTime(), 10));
     assertThat(response.getDepartures(), Matchers.hasSize(20));
 
   }

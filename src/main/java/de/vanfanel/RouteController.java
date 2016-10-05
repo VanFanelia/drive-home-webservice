@@ -219,11 +219,20 @@ public class RouteController {
     return getTrip(new TripRequest(request.getDepartureIds(),request.getDestinationId(),request.getDepartureTime().getTime()));
   }
 
-  private String convertStationNameToId(String station) throws Exception {
+  private String convertStationNameToId(String station) throws HTTPNotFoundException {
     if(StringUtils.isNumeric(station)) {
       return station;
     }
-    return getLocations(station).get(0).id;
+    try {
+      List<Location> locations = getLocationSuggestions(station);
+      if(locations.size() > 0) {
+        return locations.get(0).id;
+      } else {
+        throw new HTTPNotFoundException();
+      }
+    } catch (Exception e) {
+      throw new HTTPNotFoundException();
+    }
   }
 
   private List<Location> getLocationSuggestions(String location) throws IOException{
@@ -322,6 +331,10 @@ public class RouteController {
   }
 
   private static String productToSlackIcon(Product p) {
+
+    if(p == null){
+      return ":railway_track:";
+    }
 
     switch (p) {
       case HIGH_SPEED_TRAIN:
